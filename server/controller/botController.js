@@ -12,7 +12,9 @@ const ncp = require('copy-paste') //Пакет для копирования и�
 
 const { SECRET_RECOVERY_KEY, SECRET_IDENTIFICATION_KEY } = require('../config')
 
-const { buttonForCopyToken, buttonForPassword } = require('./keyBoards')
+const { buttonForCopyToken, buttonForPassword, buttonToStartGuessing, buttonsForPlayerGuesser } = require('./keyBoards')
+
+
 
 
 
@@ -66,6 +68,12 @@ let currentTopic = '' //Текущая тема разговора
 let recoveryToken = '' //Токен восстановления
 let newPassword = '' //Новый пароль который прилетит от бота
 let currentLogin = ''
+let guesser = {
+    left: 1,
+    right: 1001,
+    resultNumber: 0,
+    attemps: 0,
+}
 
 //Функция генерации токена восстановления
 function generateRecoveryToken(chatId, identificationToken) {
@@ -80,6 +88,7 @@ function startBot() {
             { command: '/start', description: 'Познакомиться! /// Hello!' },
             { command: '/getinfo', description: 'Получить ID чата /// Get chat ID' },
             { command: '/getrecoverytoken', description: 'Получить токен восстановления /// Get recovery token' },
+            { command: '/guess', description: 'Загадай число а я попробую угадать! /// Guess your number and i will try to guess it!' },
         ])
     }
 
@@ -100,6 +109,14 @@ function startBot() {
             return await bot.sendMessage(chatId, "Для создания уникального токена восстановления, пожалуйста укажите ваш токен идентификации!\nTo create a unique recovery token, please paste your identification token!")
         }
 
+        if (message == '/guess') {
+            currentTopic = 'Угадываю число'
+            await bot.sendMessage(chatId, "Спорим, что я угадаю твоё число за 10 попыток?")
+            await bot.sendMessage(chatId, "Загадай число от 1 до 1000")
+            setTimeout(() => { bot.sendMessage(chatId, "Готов?", buttonToStartGuessing) }, 1500)
+            return
+        }
+
         //Проверка по теме разгвоора  Тема = Создание токена восстановления 
         if (currentTopic == 'Создание токена восстановления') {
             //Генерация токена..
@@ -110,7 +127,7 @@ function startBot() {
             await bot.sendMessage(chatId, 'Ваш токен восстановления\nYour recovery token is:  ' + recoveryToken, buttonForCopyToken)
             return await bot.sendMessage(chatId, "Укажите данный токен для восстановления в личном кабинете для восстановления пароля в будущем!\nPaste this recovery token in your personal account to recover your password in the future!")
         }
-           // Тема = Восстановление пароля
+        // Тема = Восстановление пароля
         if (currentTopic == 'Восстановление пароля') {
 
 
@@ -118,6 +135,8 @@ function startBot() {
             return await bot.sendMessage(chatId, `Ваш новый пароль: "${newPassword}". Верно?`, buttonForPassword)
 
         }
+
+
 
 
 
@@ -135,7 +154,7 @@ function startBot() {
         if (data == 'copyToken') {
             ncp.copy(recoveryToken, async () => { return await bot.sendMessage(chatId, 'Токен копирован. Удачного пользования!\nToken has been copied to your clipboard!') })
         }
-            // Тема = Восстановление пароля
+        // Тема = Восстановление пароля
         if (currentTopic == 'Восстановление пароля') {
             if (data == 'passIsCorrect') {
                 //Хешируем новый пароль
@@ -160,7 +179,56 @@ function startBot() {
         }
 
 
+        //Тема разговора равна - Угадываю число
+        if (currentTopic == 'Угадываю число') {
 
+            if (data == 'startGuessing') {
+                guesser.resultNumber = Math.floor((guesser.right - guesser.left) / 2)
+                guesser.attemps++
+                return bot.sendMessage(chatId, `Окей начинаем! Твоё число ${guesser.resultNumber}?`, buttonsForPlayerGuesser)
+            }
+            if (data == 'finish_guesser') {
+                return bot.sendMessage(chatId, `Отлично!\nМои попытки: ${guesser.attemps}, Твоё число: ${guesser.resultNumber} `)
+                    .then(() => {
+                        currentTopic = ''
+                        guesser = { left: 1, right: 1001, resultNumber: 0, attemps: 0, }
+                    })
+            }
+            if (data == 'less_guesser') {
+                guesser.right = guesser.resultNumber
+                let middle = Math.floor((guesser.right - guesser.left) / 2)
+                guesser.resultNumber = guesser.left + middle
+                guesser.attemps++
+                if (guesser.attemps == 10) {
+                    return bot.sendMessage(chatId, `Отлично!\nМои попытки: ${guesser.attemps}, Твоё число: ${guesser.resultNumber} `)
+                        .then(() => {
+                            currentTopic = ''
+                            guesser = { left: 1, right: 1001, resultNumber: 0, attemps: 0, }
+                        })
+                }
+                return bot.sendMessage(chatId, `Твоё число ${guesser.resultNumber}?`, buttonsForPlayerGuesser)
+            }
+            if (data == 'more_guesser') {
+                guesser.left = guesser.resultNumber
+                let middle = Math.floor((guesser.right - guesser.left) / 2)
+                guesser.resultNumber = guesser.left + middle
+                guesser.attemps++
+                if (guesser.attemps == 10) {
+                    return bot.sendMessage(chatId, `Отлично!\nМои попытки: ${guesser.attemps}, Твоё число: ${guesser.resultNumber} `)
+                        .then(() => {
+                            currentTopic = ''
+                            guesser = { left: 1, right: 1001, resultNumber: 0, attemps: 0, }
+                        })
+                }
+                return bot.sendMessage(chatId, `Твоё число ${guesser.resultNumber}?`, buttonsForPlayerGuesser)
+            }
+            if (data == 'stopGuessing') {
+                return bot.sendMessage(chatId, 'Хорошо, игра остановлена.').then(() => {
+                    currentTopic = ''
+                    guesser = { left: 1, right: 1001, resultNumber: 0, attemps: 0, }
+                })
+            }
+        }
 
     })
 

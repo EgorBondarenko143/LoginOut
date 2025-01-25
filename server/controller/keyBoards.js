@@ -18,5 +18,31 @@ module.exports = {
                 }],
             ]
         })
-    }
+    },
+
+    buttonToStartGuessing: {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [{ text: 'Готов!', callback_data: 'startGuessing' }, {
+                    text: 'Нет спасибо, я передумал', callback_data: 'stopGuessing'
+                }],
+            ]
+        })
+    },
+    buttonsForPlayerGuesser: {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [
+                    { text: 'Угадал!', callback_data: 'finish_guesser' }
+                ],
+                [
+                    { text: 'Больше!', callback_data: 'more_guesser' },
+                    { text: 'Меньше', callback_data: 'less_guesser' }
+                ],
+                [
+                    { text: 'Давай прекратим игру!', callback_data: 'stopGuessing' },
+                ],
+            ]
+        })
+    },
 }
