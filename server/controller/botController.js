@@ -12,6 +12,8 @@ const ncp = require('copy-paste') //Пакет для копирования и�
 
 const fs = require('fs')
 
+const axios = require('axios') //Пакет для http запросов
+
 const { SECRET_RECOVERY_KEY, SECRET_IDENTIFICATION_KEY, dirname_server } = require('../config')
 
 const { buttonForCopyToken, buttonForPassword, buttonToStartGuessing, buttonsForPlayerGuesser, buttonsForMusic } = require('./keyBoards')
@@ -92,6 +94,7 @@ function startBot() {
             { command: '/getrecoverytoken', description: 'Получить токен восстановления /// Get recovery token' },
             { command: '/guess', description: 'Загадай число а я попробую угадать! /// Guess your number and i will try to guess it!' },
             { command: '/music', description: 'Хочешь послушать музыка? /// Wanna listen some music?' },
+            { command: '/weather', description: 'Погода в вашем городе /// Weather broadcast in your city' },
         ])
     }
 
@@ -122,7 +125,11 @@ function startBot() {
         if (message == '/music') {
             currentTopic = 'Подбираю музыку'
             await bot.sendMessage(chatId, "Давай послушаем музыку!")
-            return await bot.sendMessage(chatId, 'Какаое у вас настроение?', buttonsForMusic )
+            return await bot.sendMessage(chatId, 'Какаое у вас настроение?', buttonsForMusic)
+        }
+        if (message == '/weather') {
+            currentTopic = "Узнаю погоду"
+            return await bot.sendMessage(chatId, 'Какой город вас интересует?')
         }
 
         //Проверка по теме разгвоора  Тема = Создание токена восстановления 
@@ -143,6 +150,37 @@ function startBot() {
             return await bot.sendMessage(chatId, `Ваш новый пароль: "${newPassword}". Верно?`, buttonForPassword)
 
         }
+        //Teма = Узнаю погоду
+        if (currentTopic == 'Узнаю погоду') {
+            currentTopic = ''
+            const city = message
+            const API_KEY = `7d4fc2350ceeb09ceb4444e0fb724312`
+            const httpRequest = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=ru`
+
+            axios.get(httpRequest)
+                .then(async (result) => {
+                    const data = result.data
+
+                    const city_name = data.name
+                    const {temp, feels_like, humidity} = data.main
+                    const description = data.weather[0].description
+                    const wind_speed = data.wind.speed
+                    const cloudiness = data.clouds.all
+
+                    await bot.sendMessage(chatId, `Погода в городе: ${city_name}`)
+                    await bot.sendMessage(chatId, `Температура сейчас: ${temp}°C, ощущается как ${feels_like}°C\n <b>${description}</b>`, {parse_mode: 'HTML'})
+                    await bot.sendMessage(chatId, `Cкорость ветра: ${wind_speed} м/c`)
+                    return await bot.sendMessage(chatId, `Облачность:${cloudiness}%. Влажность:${humidity}%`)
+                    // Получить коорд для слуд строки
+                    //await bot.sendLocation(id, dolgota, shirota)
+
+                })
+                .catch(async (error) => {
+                     await bot.sendMessage(chatId, 'Такой город не найден')
+                })
+                return
+        }
+        
 
 
 
@@ -239,14 +277,14 @@ function startBot() {
         }
 
         //Тема == слушаем музыку
-        if(currentTopic == 'Подбираю музыку'){
-        
-        const url = dirname_server + '/static/music/' + data
-        const songs = fs.readdirSync(url)
-        const random =  Math.round(Math.random() * (songs.length - 1) + 1) - 1;
-        bot.sendMessage(chatId, 'Вот ваша музыка наслаждайтесь! (Возможно вам придётся чуть-чуть подождать)')
-        bot.sendAudio(chatId, url+'/'+songs[random])
-        
+        if (currentTopic == 'Подбираю музыку') {
+
+            const url = dirname_server + '/static/music/' + data
+            const songs = fs.readdirSync(url)
+            const random = Math.round(Math.random() * (songs.length - 1) + 1) - 1;
+            bot.sendMessage(chatId, 'Вот ваша музыка наслаждайтесь! (Возможно вам придётся чуть-чуть подождать)')
+            return await bot.sendAudio(chatId, url + '/' + songs[random])
+
         }
     })
 
