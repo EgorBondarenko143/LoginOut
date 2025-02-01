@@ -45,4 +45,19 @@ module.exports = {
             ]
         })
     },
+    buttonsForMusic: {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [
+                    { text: 'Всё отлично!', callback_data: 'perfect_mood' }
+                ],
+                [
+                    { text: 'Средненько', callback_data: 'middle_mood' },
+                ],
+                [
+                    { text: 'Ужасное..', callback_data: 'bad_mood' },
+                ],
+            ]
+        })
+    }
 }

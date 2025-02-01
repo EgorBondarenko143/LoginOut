@@ -10,9 +10,11 @@ const TelegramApi = require('node-telegram-bot-api') //Пакет для раб�
 
 const ncp = require('copy-paste') //Пакет для копирования информации в буфер обмена на сервере
 
-const { SECRET_RECOVERY_KEY, SECRET_IDENTIFICATION_KEY } = require('../config')
+const fs = require('fs')
 
-const { buttonForCopyToken, buttonForPassword, buttonToStartGuessing, buttonsForPlayerGuesser } = require('./keyBoards')
+const { SECRET_RECOVERY_KEY, SECRET_IDENTIFICATION_KEY, dirname_server } = require('../config')
+
+const { buttonForCopyToken, buttonForPassword, buttonToStartGuessing, buttonsForPlayerGuesser, buttonsForMusic } = require('./keyBoards')
 
 
 
@@ -89,6 +91,7 @@ function startBot() {
             { command: '/getinfo', description: 'Получить ID чата /// Get chat ID' },
             { command: '/getrecoverytoken', description: 'Получить токен восстановления /// Get recovery token' },
             { command: '/guess', description: 'Загадай число а я попробую угадать! /// Guess your number and i will try to guess it!' },
+            { command: '/music', description: 'Хочешь послушать музыка? /// Wanna listen some music?' },
         ])
     }
 
@@ -115,6 +118,11 @@ function startBot() {
             await bot.sendMessage(chatId, "Загадай число от 1 до 1000")
             setTimeout(() => { bot.sendMessage(chatId, "Готов?", buttonToStartGuessing) }, 1500)
             return
+        }
+        if (message == '/music') {
+            currentTopic = 'Подбираю музыку'
+            await bot.sendMessage(chatId, "Давай послушаем музыку!")
+            return await bot.sendMessage(chatId, 'Какаое у вас настроение?', buttonsForMusic )
         }
 
         //Проверка по теме разгвоора  Тема = Создание токена восстановления 
@@ -230,6 +238,16 @@ function startBot() {
             }
         }
 
+        //Тема == слушаем музыку
+        if(currentTopic == 'Подбираю музыку'){
+        
+        const url = dirname_server + '/static/music/' + data
+        const songs = fs.readdirSync(url)
+        const random =  Math.round(Math.random() * (songs.length - 1) + 1) - 1;
+        bot.sendMessage(chatId, 'Вот ваша музыка наслаждайтесь! (Возможно вам придётся чуть-чуть подождать)')
+        bot.sendAudio(chatId, url+'/'+songs[random])
+        
+        }
     })
 
 
