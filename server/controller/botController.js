@@ -162,25 +162,26 @@ function startBot() {
                     const data = result.data
 
                     const city_name = data.name
-                    const {temp, feels_like, humidity} = data.main
+                    const { temp, feels_like, humidity } = data.main
                     const description = data.weather[0].description
                     const wind_speed = data.wind.speed
                     const cloudiness = data.clouds.all
+                    const lon = data.coord.lon
+                    const lat = data.coord.lat
 
                     await bot.sendMessage(chatId, `Погода в городе: ${city_name}`)
-                    await bot.sendMessage(chatId, `Температура сейчас: ${temp}°C, ощущается как ${feels_like}°C\n <b>${description}</b>`, {parse_mode: 'HTML'})
+                    await bot.sendMessage(chatId, `Температура сейчас: ${temp}°C, ощущается как ${feels_like}°C\n <b>${description}</b>`, { parse_mode: 'HTML' })
                     await bot.sendMessage(chatId, `Cкорость ветра: ${wind_speed} м/c`)
-                    return await bot.sendMessage(chatId, `Облачность:${cloudiness}%. Влажность:${humidity}%`)
-                    // Получить коорд для слуд строки
-                    //await bot.sendLocation(id, dolgota, shirota)
+                    await bot.sendMessage(chatId, `Облачность:${cloudiness}%. Влажность:${humidity}%`)
+                    return await bot.sendLocation(chatId, lat, lon)
 
                 })
                 .catch(async (error) => {
-                     await bot.sendMessage(chatId, 'Такой город не найден')
+                    await bot.sendMessage(chatId, 'Такой город не найден')
                 })
-                return
+            return
         }
-        
+
 
 
 
