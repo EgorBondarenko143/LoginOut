@@ -39,6 +39,7 @@ export default {
     },
     methods: {
         async authorization() {
+              document.cookie = `ACCESS_TOKEN=`
             await axios.post('/api/authorization', this.userinfo)
                 .then((result) => {
                     this.messages.error = ''
@@ -58,7 +59,7 @@ export default {
                     .then((result) => {
                         this.messages.error = ''
                         this.messages.success = 'Успешно! ' + result.data
-                    }) 
+                    })
                     .catch((err) => {
                         this.messages.error = 'Ошибка! ' + err.response.data
                         this.messages.success = ''

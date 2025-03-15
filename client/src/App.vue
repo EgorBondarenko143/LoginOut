@@ -3,15 +3,17 @@
     <header id="main__header">
       <h1>LOGO</h1>
       <nav>
-        <router-link to="/reg" v-if="!USER_INFO">Регистрация</router-link>
-        <router-link to="/auth" v-if="!USER_INFO">Авторизация</router-link>
-        <router-link to="/account" v-if="USER_INFO">Личный кабинет</router-link>
+        <router-link to="/reg" v-if="!USER_INFO.login">Регистрация</router-link>
+        <router-link to="/auth" v-if="!USER_INFO.login">Авторизация</router-link>
+        <router-link to="/account" v-if="USER_INFO.login">Личный кабинет</router-link>
+        <router-link to="/general-chat" v-if="USER_INFO.login">Общий чат</router-link>
+        <!-- <router-link to="/private-chat" v-if="USER_INFO.login">Приватный чат</router-link> -->
       </nav>
     </header>
 
 
     <div id="content__wrapper">
-      <router-view @updateUser="checkAuth" ></router-view>
+      <router-view @updateUser="checkAuth"></router-view>
     </div>
 
   </div>
@@ -35,7 +37,7 @@ export default {
       await axios.post('/api/authorization')
         .then((result) => { this.USER_INFO = result.data[0] })
         .catch((err) => {
-          this.USER_INFO
+          this.USER_INFO = {}
           console.error('Ошибка авторизации...')
           this.$router.push('/auth')
 
